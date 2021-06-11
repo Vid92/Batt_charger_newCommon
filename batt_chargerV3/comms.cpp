@@ -9,7 +9,7 @@
 
 int const lenbuff=1024; // Longitud de buffer, Ajustar 128 512 1024
 
-unsigned int myaddress = 1;   //255
+//unsigned int myaddress = 1;   //255
 const char beginchar = 0x02; //inicio
 const char endchar = 0x04;   //fin
 const char runchar = 0x33;   //run
@@ -64,7 +64,7 @@ char stepState[2] = "I";
 char timehms[9] = "00:00:00";
 char timehmsa[9] = "00:00:00";*/
 
-char var_addr[5];
+//char var_addr[5];
 char var_current[5];
 char var_voltage[5];
 char var_temp[5];
@@ -93,7 +93,7 @@ char let_totalhms[4]= ",TT";
 char let_nameProg[3]= ",N";
 char let_coma[2] = ",";
 
-char str_addr[5];
+//char str_addr[5];
 char str_current[5];
 char str_voltage[5];
 char str_temp[5];
@@ -118,20 +118,15 @@ void comms_inicbuff(void){ // Inicia a 0 cbuff
 
 //--------------------------- add data to buffer -----------------------------//
 int comms_addcbuff(char c){ // Añade a cbuff
-  Debug.println("c: ");
-  Debug.print(c);
   switch(c){
     case endchar:           // Enter -> Habilita Flag para procesar
       cbuff[xbuff++]=c;       // Añade carácter recibido al Buffer
       flagcommand=true;     // Comando en Main
       flagbuff=true;
-      Debug.println("comms: ");
-      Debug.print(cbuff);
       break;
     default:
-     cbuff[xbuff++]=c;       // Añade carácter recibido al Buffer
-     Debug.println(cbuff);
-     //break;
+      cbuff[xbuff++]=c;       // Añade carácter recibido al Buffer
+      break;
   }
 }
 
@@ -163,21 +158,26 @@ void comms_procesa_comando(void){
     tbuff[i]=0x00;
   }
     Debug.println("Leyendo...");
-    //Debug.print(cbuff);
+    /*for(int z = 0;z<xbuff;z++){
+        Debug.println(cbuff[z],HEX);
+    }
+    Debug.print("contador_carac: ");
+    Debug.println(xbuff);*/
+
     if(cbuff[0]==beginchar&&cbuff[xbuff-4]==0x03&&cbuff[xbuff-1]==endchar){
       memset(final,0,128); //limpia antes de concatenar
-      int n=3;
+      int n=2;
       for(int x=n;; x++){
         if(cbuff[x]==0x03)break;
 
         tbuff[x-n]=cbuff[x]; // a partir del 3er byte y hasta 0.
         len++;
       }
-
-      //Debug.println(cbuff);
-      //Debug.println(strlen(cbuff));
-      /*Debug.println("--------------");
-      Debug.println(tbuff);
+      /*Debug.println("tbuff: ");
+      for(int z = 0; z<len; z++){
+        Debug.println(tbuff[z],HEX);
+      }
+      Debug.println("--------------");
       Debug.println(len);*/
 
       if(len<lenbuff){
@@ -185,80 +185,82 @@ void comms_procesa_comando(void){
         crc16_high = highByte(dato);
         crc16_low = lowByte(dato);
       }
-
+      /*Debug.print("crc16_high: ");
+      Debug.println(crc16_high & 0xFF,HEX);
+      Debug.print("crc16_low: ");
+      Debug.println(crc16_low & 0xFF,HEX);*/
       //----------------------------- validacion CRC ------------------------------//
       if(cbuff[xbuff-3]==crc16_low && cbuff[xbuff-2]==crc16_high) //validacion CRC*/
       {
         Debug.println("valido crc");
-        if(cbuff[1]==myaddress) //address
-        {
+
             //Debug.println("valido address");
-            if(cbuff[2]==Ping){
+            if(cbuff[1]==Ping){ //time stamp
               Debug.println("PING");
               //address and action:pass
-              dtostrf(myaddress, 2, 0, str_addr);
-              sprintf(var_addr,"%s",str_addr);
-              strcat(final,var_addr);
+              //dtostrf(myaddress, 2, 0, str_addr);
+              //sprintf(var_addr,"%s",str_addr);
+              //strcat(final,var_addr);
               strcat(final,var_pass);
 
               doCrc(strlen(final)); //crc
-              Serial.write(2); Serial.print(myaddress); Serial.write("ACTION: PASS"); Serial.write(3); Serial.write(crc16_low);Serial.write(crc16_high); Serial.write(4);
+              Serial.write(2); Serial.write("ACTION: PASS"); Serial.write(3); Serial.write(crc16_low);Serial.write(crc16_high); Serial.write(4);
             }
 
-            if(cbuff[2]==runchar){  //run
+            if(cbuff[1]==runchar){  //run
               Debug.println("Run");
 
-              dtostrf(myaddress, 2, 0, str_addr);
-              sprintf(var_addr,"%s",str_addr);
+              //dtostrf(myaddress, 2, 0, str_addr);
+              //sprintf(var_addr,"%s",str_addr);
               dtostrf(51, 2, 0, str_run);
               sprintf(var_run,"%s",str_run);
 
-              strcat(final,var_addr);
+              //strcat(final,var_addr);
               strcat(final,var_run);
               strcat(final,var_passrun);
 
               doCrc(strlen(final)); //crc
-              Serial.write(2); Serial.print(myaddress); Serial.write(51); Serial.write("ACTION: PASS,RUN"); Serial.write(3); Serial.write(crc16_low);Serial.write(crc16_high); Serial.write(4);
+              Serial.write(2); Serial.write(51); Serial.write("ACTION: PASS,RUN"); Serial.write(3); Serial.write(crc16_low);Serial.write(crc16_high); Serial.write(4);
             }
 
-            if(cbuff[2]==pausechar){  //pause
+            if(cbuff[1]==pausechar){  //pause
               Debug.println("Pause");
-              dtostrf(myaddress, 2, 0, str_addr);
-              sprintf(var_addr,"%s",str_addr);
+              //dtostrf(myaddress, 2, 0, str_addr);
+              //sprintf(var_addr,"%s",str_addr);
               dtostrf(52, 2, 0, str_pause);
               sprintf(var_pause,"%s",str_pause);
 
-              strcat(final,var_addr);
+              //strcat(final,var_addr);
               strcat(final,var_pause);
               strcat(final,var_passpause);
 
               doCrc(strlen(final));//crc
-              Serial.write(2); Serial.print(myaddress); Serial.write(52); Serial.write("ACTION: PASS,PAUSE"); Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
+              Serial.write(2); Serial.write(52); Serial.write("ACTION: PASS,PAUSE"); Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
             }
 
-            if(cbuff[2]==stopchar){ //stop
+            if(cbuff[1]==stopchar){ //stop
               Debug.println("Stop");
 
-              dtostrf(myaddress, 2, 0, str_addr);
-              sprintf(var_addr,"%s",str_addr);
+              //dtostrf(myaddress, 2, 0, str_addr);
+              //sprintf(var_addr,"%s",str_addr);
 
               dtostrf(53, 2, 0, str_stop);
               sprintf(var_stop,"%s",str_stop);
 
-              strcat(final,var_addr);
+              //strcat(final,var_addr);
               strcat(final,var_stop);
               strcat(final,var_passtop);
 
               doCrc(strlen(final));
-              Serial.write(2);Serial.print(myaddress); Serial.write(53); Serial.write("ACTION: PASS,STOP"); Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
+              Serial.write(2); Serial.write(53); Serial.write("ACTION: PASS,STOP"); Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
             }
 
-            if(cbuff[2]==combchar){  //show I,V,T
+            if(cbuff[1]==combchar){  //show I,V,T
               Debug.println("Datos");
 
               //TempTime1 = totAH + valAH;
-              dtostrf(myaddress, 2, 0, str_addr);
-              sprintf(var_addr,"%s",str_addr);
+              //dtostrf(myaddress, 2, 0, str_addr);
+              //sprintf(var_addr,"%s",str_addr);
               dtostrf(valcurrent, 2, 2, str_current);
               sprintf(var_current,"%s",str_current);
               dtostrf(valvoltage, 2, 2, str_voltage);
@@ -272,7 +274,7 @@ void comms_procesa_comando(void){
               dtostrf(count, 2, 0, str_count);
               sprintf(var_count,"%s",str_count);
 
-              strcat(final,var_addr);
+              //strcat(final,var_addr);
               strcat(final,let_value);
               strcat(final,var_current);
               strcat(final,let_voltage);
@@ -306,28 +308,27 @@ void comms_procesa_comando(void){
               Debug.print("crc16_low: ");
               Debug.println(crc16_low);*/
 
-              Serial.write(2);Serial.print(myaddress);  Serial.write("VALUE: ");Serial.write("I");Serial.print(valcurrent); Serial.write(","); Serial.write("V"); Serial.print(valvoltage);Serial.write(","); Serial.write("T"); Serial.print(valtemp);Serial.write(",");Serial.write("AH");Serial.print(valAH);Serial.write(",");Serial.write("AC");Serial.print(TempTime1);Serial.write(",");Serial.write("P"); Serial.print(count);Serial.write(",");Serial.write("S");Serial.write(letter);Serial.write(","); Serial.write("t"); Serial.print(timehms);Serial.write(",");Serial.write("Tt"); Serial.print(timehmsa); Serial.write(","); Serial.write("TT"); Serial.print(totalhms); Serial.write(",");Serial.write("N"); Serial.print(nameProg); Serial.write(","); Serial.print(stepState);Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
+              Serial.write(2);Serial.write("VALUE: ");Serial.write("I");Serial.print(valcurrent); Serial.write(","); Serial.write("V"); Serial.print(valvoltage);Serial.write(","); Serial.write("T"); Serial.print(valtemp);Serial.write(",");Serial.write("AH");Serial.print(valAH);Serial.write(",");Serial.write("AC");Serial.print(TempTime1);Serial.write(",");Serial.write("P"); Serial.print(count);Serial.write(",");Serial.write("S");Serial.write(letter);Serial.write(","); Serial.write("t"); Serial.print(timehms);Serial.write(",");Serial.write("Tt"); Serial.print(timehmsa); Serial.write(","); Serial.write("TT"); Serial.print(totalhms); Serial.write(",");Serial.write("N"); Serial.print(nameProg); Serial.write(","); Serial.print(stepState);Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
             }
 
-            if(cbuff[2]==writechar){  //writting eeprom Json
+            if(cbuff[1]==writechar){  //writting eeprom Json
               Debug.println("Write");
-              if(cbuff[8]==0x5B){ //3  OJO!! 28 0x6B = [
-                int i = 3;
+              if(cbuff[7]==0x5B){ //3  OJO!! 28 0x6B = [
+                int i = 2;//3
                 do{ // Extraemos argumento del buffer
-                  arg[ i - 3 ] = cbuff[i]; // a partir del 3er byte y hasta 0.
+                  arg[ i - 2 ] = cbuff[i]; // a partir del 3er byte y hasta 0.
                 }while (cbuff[++i]!=0x03);
                 Debug.println("writingEEPROM");
                 Debug.println(arg);
 
-                dtostrf(myaddress, 2, 0, str_addr);
-                sprintf(var_addr,"%s",str_addr);
-
-                strcat(final,var_addr);
+                //dtostrf(myaddress, 2, 0, str_addr);
+                //sprintf(var_addr,"%s",str_addr);
+                //strcat(final,var_addr);
                 strcat(final,"W");
                 strcat(final,var_pass);
 
                 doCrc(strlen(final));//crc
-                Serial.write(2); Serial.print(myaddress); Serial.write(writechar); Serial.write("ACTION: PASS"); Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
+                Serial.write(2); Serial.write(writechar); Serial.write("ACTION: PASS"); Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
               }
             }
 
@@ -337,11 +338,11 @@ void comms_procesa_comando(void){
                 IDread();
                 //eepromread();
             }*/
-        }
+
       }
-      if(!flagbuff)comms_inicbuff(); // Borro buffer.
-      //comms_inicbuff();
+      comms_inicbuff(); // Borro buffer.
       //Debug.println("Procesado"); // Monitorizo procesado.
 
     }
+    if(!flagbuff)comms_inicbuff(); // Borro buffer.
 }

@@ -83,8 +83,6 @@ float mintemp[17];
 void setup()
 {
   //baudios
-  Debug.begin(115200); //115200
-  Serial.begin(115200);
   Wire.begin();
   control.begin();
 
@@ -151,6 +149,8 @@ void vCONTROLTask2(void *pvParameters) {
 
 void vUARTTask(void *pvParameters) {
   (void) pvParameters;
+  Debug.begin(115200); //115200
+  Serial.begin(115200);
   //t.every(1000,printMessage);
   for (;;) {
     //t.update();
@@ -159,7 +159,7 @@ void vUARTTask(void *pvParameters) {
     }*/
     if (flagcommand)comms_procesa_comando();
     serialEvent();
-    vTaskDelay(50);
+    vTaskDelay(1);
   }
 }
 
@@ -259,5 +259,6 @@ void serialEvent(){
     while(Serial.available()){  // Si hay algo pendiente de recibir ...
       rcvchar=Serial.read();    // lo descargo y ...
       comms_addcbuff(rcvchar);   // lo añado al buffer y ...
+
     }
 }
