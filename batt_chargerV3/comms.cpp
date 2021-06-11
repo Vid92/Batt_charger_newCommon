@@ -34,7 +34,7 @@ float totalTime;
 //unsigned long Ttime = 0; //variable acum.tiempo
 float TempTime1 = 0; // aux AH acumulado
 float totAH = 0.0;   //variable acum.AH
-int xbuff=0;      // Índice: siguiente char en cbuff
+int xbuff=0x00;      // Índice: siguiente char en cbuff
 char cbuff[lenbuff]; // Buffer
 //bool flagcommand=false;  // Flag para indicar comando disponible
 
@@ -118,17 +118,21 @@ void comms_inicbuff(void){ // Inicia a 0 cbuff
 
 //--------------------------- add data to buffer -----------------------------//
 int comms_addcbuff(char c){ // Añade a cbuff
+  Debug.println("c: ");
+  Debug.print(c);
   switch(c){
     case endchar:           // Enter -> Habilita Flag para procesar
       cbuff[xbuff++]=c;       // Añade carácter recibido al Buffer
       flagcommand=true;     // Comando en Main
       flagbuff=true;
+      Debug.println("comms: ");
+      Debug.print(cbuff);
       break;
     default:
      cbuff[xbuff++]=c;       // Añade carácter recibido al Buffer
-     break;
+     Debug.println(cbuff);
+     //break;
   }
-  return 0;
 }
 
 //----------------------------------- CRC -------------------------------------//
@@ -159,8 +163,7 @@ void comms_procesa_comando(void){
     tbuff[i]=0x00;
   }
     Debug.println("Leyendo...");
-
-    //Debug.println(cbuff);
+    //Debug.print(cbuff);
     if(cbuff[0]==beginchar&&cbuff[xbuff-4]==0x03&&cbuff[xbuff-1]==endchar){
       memset(final,0,128); //limpia antes de concatenar
       int n=3;
@@ -199,7 +202,7 @@ void comms_procesa_comando(void){
               strcat(final,var_pass);
 
               doCrc(strlen(final)); //crc
-              digitalWrite(17, HIGH); Serial1.write(2); Serial1.print(myaddress); Serial1.write("ACTION: PASS"); Serial1.write(3); Serial1.write(crc16_low);Serial1.write(crc16_high); Serial1.write(4);vTaskDelay(2); digitalWrite(17, LOW);
+              Serial.write(2); Serial.print(myaddress); Serial.write("ACTION: PASS"); Serial.write(3); Serial.write(crc16_low);Serial.write(crc16_high); Serial.write(4);
             }
 
             if(cbuff[2]==runchar){  //run
@@ -215,7 +218,7 @@ void comms_procesa_comando(void){
               strcat(final,var_passrun);
 
               doCrc(strlen(final)); //crc
-              digitalWrite(17, HIGH); Serial1.write(2); Serial1.print(myaddress); Serial1.write(51); Serial1.write("ACTION: PASS,RUN"); Serial1.write(3); Serial1.write(crc16_low);Serial1.write(crc16_high); Serial1.write(4); vTaskDelay(2); digitalWrite(17, LOW);
+              Serial.write(2); Serial.print(myaddress); Serial.write(51); Serial.write("ACTION: PASS,RUN"); Serial.write(3); Serial.write(crc16_low);Serial.write(crc16_high); Serial.write(4);
             }
 
             if(cbuff[2]==pausechar){  //pause
@@ -230,7 +233,7 @@ void comms_procesa_comando(void){
               strcat(final,var_passpause);
 
               doCrc(strlen(final));//crc
-              digitalWrite(17, HIGH); Serial1.write(2); Serial1.print(myaddress); Serial1.write(52); Serial1.write("ACTION: PASS,PAUSE"); Serial1.write(3); Serial1.write(crc16_low); Serial1.write(crc16_high); Serial1.write(4); vTaskDelay(2); digitalWrite(17, LOW);
+              Serial.write(2); Serial.print(myaddress); Serial.write(52); Serial.write("ACTION: PASS,PAUSE"); Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
             }
 
             if(cbuff[2]==stopchar){ //stop
@@ -247,7 +250,7 @@ void comms_procesa_comando(void){
               strcat(final,var_passtop);
 
               doCrc(strlen(final));
-              digitalWrite(17, HIGH);Serial1.write(2);Serial1.print(myaddress); Serial1.write(53); Serial1.write("ACTION: PASS,STOP"); Serial1.write(3); Serial1.write(crc16_low); Serial1.write(crc16_high); Serial1.write(4); vTaskDelay(2); digitalWrite(17, LOW);
+              Serial.write(2);Serial.print(myaddress); Serial.write(53); Serial.write("ACTION: PASS,STOP"); Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
             }
 
             if(cbuff[2]==combchar){  //show I,V,T
@@ -303,7 +306,7 @@ void comms_procesa_comando(void){
               Debug.print("crc16_low: ");
               Debug.println(crc16_low);*/
 
-              digitalWrite(17, HIGH); Serial1.write(2);Serial1.print(myaddress);  Serial1.write("VALUE: ");Serial1.write("I");Serial1.print(valcurrent); Serial1.write(","); Serial1.write("V"); Serial1.print(valvoltage);Serial1.write(","); Serial1.write("T"); Serial1.print(valtemp);Serial1.write(",");Serial1.write("AH");Serial1.print(valAH);Serial1.write(",");Serial1.write("AC");Serial1.print(TempTime1);Serial1.write(",");Serial1.write("P"); Serial1.print(count);Serial1.write(",");Serial1.write("S");Serial1.write(letter);Serial1.write(","); Serial1.write("t"); Serial1.print(timehms);Serial1.write(",");Serial1.write("Tt"); Serial1.print(timehmsa); Serial1.write(","); Serial1.write("TT"); Serial1.print(totalhms); Serial1.write(",");Serial1.write("N"); Serial1.print(nameProg); Serial1.write(","); Serial1.print(stepState);Serial1.write(3); Serial1.write(crc16_low); Serial1.write(crc16_high); Serial1.write(4);vTaskDelay(2); digitalWrite(17, LOW);
+              Serial.write(2);Serial.print(myaddress);  Serial.write("VALUE: ");Serial.write("I");Serial.print(valcurrent); Serial.write(","); Serial.write("V"); Serial.print(valvoltage);Serial.write(","); Serial.write("T"); Serial.print(valtemp);Serial.write(",");Serial.write("AH");Serial.print(valAH);Serial.write(",");Serial.write("AC");Serial.print(TempTime1);Serial.write(",");Serial.write("P"); Serial.print(count);Serial.write(",");Serial.write("S");Serial.write(letter);Serial.write(","); Serial.write("t"); Serial.print(timehms);Serial.write(",");Serial.write("Tt"); Serial.print(timehmsa); Serial.write(","); Serial.write("TT"); Serial.print(totalhms); Serial.write(",");Serial.write("N"); Serial.print(nameProg); Serial.write(","); Serial.print(stepState);Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
             }
 
             if(cbuff[2]==writechar){  //writting eeprom Json
@@ -324,7 +327,7 @@ void comms_procesa_comando(void){
                 strcat(final,var_pass);
 
                 doCrc(strlen(final));//crc
-                digitalWrite(17, HIGH); Serial1.write(2); Serial1.print(myaddress); Serial1.write(writechar); Serial1.write("ACTION: PASS"); Serial1.write(3); Serial1.write(crc16_low); Serial1.write(crc16_high); Serial1.write(4); vTaskDelay(2); digitalWrite(17, LOW);
+                Serial.write(2); Serial.print(myaddress); Serial.write(writechar); Serial.write("ACTION: PASS"); Serial.write(3); Serial.write(crc16_low); Serial.write(crc16_high); Serial.write(4);
               }
             }
 

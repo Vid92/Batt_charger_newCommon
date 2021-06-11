@@ -11,7 +11,7 @@
 
 void vUARTTask(void *pvParameters);
 void vLEDFlashTask1(void *pvParameters);
-void vCONTROLTask2(void *pvParameters);
+//void vCONTROLTask2(void *pvParameters);
 
 //StopWatch controlTime;
 Control control;
@@ -67,9 +67,9 @@ String mint0 = "";
 String hor0 = "";
 String seg0 = "";*/
 
-int LedComms = 17; //C5 activa o desactiva comm
+//sdcardint LedComms = 17; //C5 activa o desactiva comm
 int LedRelay = 20; //D0 activa o desactiva relevador
-
+int rstTcp = 21;   //D1 activa o desactiva reset TCP
 int ledvolt = 0;
 
 char anbu[1024];  //cfg json
@@ -84,7 +84,7 @@ void setup()
 {
   //baudios
   Debug.begin(115200); //115200
-  Serial1.begin(115200);
+  Serial.begin(115200);
   Wire.begin();
   control.begin();
 
@@ -92,11 +92,11 @@ void setup()
   Debug.println(compile_date);
 
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(LedComms, OUTPUT);
   pinMode(LedRelay, OUTPUT);
+  pinMode(rstTcp, OUTPUT);
 
+  digitalWrite(rstTcp, HIGH); //se resetea con high en programa , hw es al reves
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(LedComms, LOW);
   digitalWrite(LedRelay, LOW);
 
   //delay(3000);
@@ -117,12 +117,12 @@ void setup()
               tskIDLE_PRIORITY + 2,
               NULL);
 
-  xTaskCreate(vCONTROLTask2,
+/*  xTaskCreate(vCONTROLTask2,
               (signed portCHAR *)"Task2",
               128,
               NULL,
               tskIDLE_PRIORITY + 3,
-              NULL);
+              NULL);*/
 
   vTaskStartScheduler();
 }
@@ -138,15 +138,16 @@ void vLEDFlashTask1(void *pvParameters) {
   }
 }
 
-
+/*
 void vCONTROLTask2(void *pvParameters) {
   (void) pvParameters;
   for (;;) {
     //control.readData();
     Debug.println("ControlreadData");
-    vTaskDelay(1);
+    Debug.flush();
+    vTaskDelay(500);
   }
-}
+}*/
 
 void vUARTTask(void *pvParameters) {
   (void) pvParameters;
@@ -157,8 +158,8 @@ void vUARTTask(void *pvParameters) {
       printMessage();
     }*/
     if (flagcommand)comms_procesa_comando();
-    serialEvent1();
-    vTaskDelay(1);
+    serialEvent();
+    vTaskDelay(50);
   }
 }
 
@@ -252,11 +253,11 @@ String currentTime(unsigned long temSeg){
 }
 */
 //------------------ Interrupción recepción serie USART ------------------------//
-void serialEvent1(){
+void serialEvent(){
     flagbuff = false;
     rcvchar=0x00;                // Inicializo carácter recibido
-    while(Serial1.available()){  // Si hay algo pendiente de recibir ...
-      rcvchar=Serial1.read();    // lo descargo y ...
+    while(Serial.available()){  // Si hay algo pendiente de recibir ...
+      rcvchar=Serial.read();    // lo descargo y ...
       comms_addcbuff(rcvchar);   // lo añado al buffer y ...
     }
 }
