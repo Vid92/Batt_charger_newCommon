@@ -5,15 +5,15 @@
 #include "comms.h"
 //#include "xmDAC.h"
 //#include "Timer.h"
-#include "globals.h"
+//#include "globals.h"
 #include <Wire.h>
 #include <Arduino.h>
 
 void vUARTTask(void *pvParameters);
 void vLEDFlashTask1(void *pvParameters);
-//void vCONTROLTask2(void *pvParameters);
+void vCONTROLTask2(void *pvParameters);
 
-//StopWatch controlTime;
+StopWatch controlTime;
 Control control;
 //Program program;
 //I2CEEPROM i2c_eeprom(0x50);
@@ -86,8 +86,12 @@ void setup()
   Wire.begin();
   control.begin();
 
+  Debug4.begin(115200); //115200
+  Serial.begin(115200);
+  
   const char compile_date[] = __DATE__ " " __TIME__; //fecha-hora-compilacion
-  Debug.println(compile_date);
+  Debug4.println(compile_date);
+  Debug4.flush();
 
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(LedRelay, OUTPUT);
@@ -102,9 +106,9 @@ void setup()
 
   xTaskCreate(vUARTTask,
               (signed portCHAR *)"UARTTask",
-              256,
+              512,
               NULL,
-              tskIDLE_PRIORITY + 2,
+              tskIDLE_PRIORITY + 3,
               NULL);
 
   xTaskCreate(vLEDFlashTask1,
@@ -112,15 +116,15 @@ void setup()
               configMINIMAL_STACK_SIZE,
               //128,
               NULL,
-              tskIDLE_PRIORITY + 2,
+              tskIDLE_PRIORITY + 1,
               NULL);
 
-/*  xTaskCreate(vCONTROLTask2,
+  xTaskCreate(vCONTROLTask2,
               (signed portCHAR *)"Task2",
-              128,
+              256,
               NULL,
-              tskIDLE_PRIORITY + 3,
-              NULL);*/
+              tskIDLE_PRIORITY + 2,
+              NULL);
 
   vTaskStartScheduler();
 }
@@ -136,21 +140,18 @@ void vLEDFlashTask1(void *pvParameters) {
   }
 }
 
-/*
+
 void vCONTROLTask2(void *pvParameters) {
   (void) pvParameters;
   for (;;) {
-    //control.readData();
-    Debug.println("ControlreadData");
-    Debug.flush();
-    vTaskDelay(500);
+    control.readData();
+    vTaskDelay(1);
   }
-}*/
+}
 
 void vUARTTask(void *pvParameters) {
   (void) pvParameters;
-  Debug.begin(115200); //115200
-  Serial.begin(115200);
+  
   //t.every(1000,printMessage);
   for (;;) {
     //t.update();
@@ -159,7 +160,7 @@ void vUARTTask(void *pvParameters) {
     }*/
     if (flagcommand)comms_procesa_comando();
     serialEvent();
-    vTaskDelay(1);
+    vTaskDelay(5);
   }
 }
 
@@ -176,14 +177,14 @@ void printMessage()
     timeAc = Ttime + (controlTime.ms()*0.001);
     timehmsa = currentTime(timeAc);
 
-    Debug.print("time: ");
-    Debug.print(timehms);
-    Debug.print(", stopwatch : ");
-    Debug.print(controlTime.ms()*0.001);
-    Debug.print(", Ttime : ");
-    Debug.print(Ttime);
-    Debug.print(", AH : ");
-    Debug.println(valAH);
+    Debug4.print("time: ");
+    Debug4.print(timehms);
+    Debug4.print(", stopwatch : ");
+    Debug4.print(controlTime.ms()*0.001);
+    Debug4.print(", Ttime : ");
+    Debug4.print(Ttime);
+    Debug4.print(", AH : ");
+    Debug4.println(valAH);
 }
 //---------------------- funcion para formato hor:min:seg ----------------------//
 String currentTime(unsigned long temSeg){
@@ -253,12 +254,41 @@ String currentTime(unsigned long temSeg){
 }
 */
 //------------------ Interrupción recepción serie USART ------------------------//
-void serialEvent(){
-    flagbuff = false;
-    rcvchar=0x00;                // Inicializo carácter recibido
-    while(Serial.available()){  // Si hay algo pendiente de recibir ...
-      rcvchar=Serial.read();    // lo descargo y ...
-      comms_addcbuff(rcvchar);   // lo añado al buffer y ...
 
+void serialEvent(){
+  flagbuff = false;
+  rcvchar=0x00;                // Inicializo carácter recibido
+  if (Serial.available()) {
+        rcvchar = Serial.peekLast();
+        if (rcvchar == 0x04) {
+          while(Serial.available()){  // Si hay algo pendiente de recibir ...
+          rcvchar=Serial.read();    // lo descargo y ...
+          comms_addcbuff(rcvchar);   // lo añado al buffer y ...
+          }
+        }
     }
 }
+
+/*
+void serialEvent() {
+  //flagbuff = false;
+  rcvchar = 0x00;
+  //Debug4.print("Available: ");
+  //Debug4.println(Serial.available());
+  if (Serial.available()) {
+    rcvchar = Serial.peekLast();
+    Debug4.println(rcvchar, HEX);
+    if (rcvchar == 0x04) {
+      int cuenta = 0;
+      Debug4.println("--MSG RECEIVED--BEGIN--");
+      while (Serial.available()) {
+        rcvchar = Serial.read();
+        Debug4.println(rcvchar, HEX);
+        cuenta ++;
+      }
+      Debug4.println("--MSG RECEIVED--END--");
+      Debug4.print("LEN: ");
+      Debug4.println(cuenta);
+    }
+  }
+}*/

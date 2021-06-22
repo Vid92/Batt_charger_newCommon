@@ -5,7 +5,7 @@
 #include "StopWatch.h"
 #include "globals.h"
 
-//extern StopWatch controlTime;  // solo para mostrar valores
+extern StopWatch controlTime;  // solo para mostrar valores
 //extern bool flagStep;
 extern double valcurrent;
 extern double valvoltage;
